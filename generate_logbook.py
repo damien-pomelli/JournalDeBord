@@ -1,23 +1,15 @@
-# Crée un journal de bord dans le dossier Logbook sous la forme
-# de fichiers Mardown pour chaque semaine de l'année.
-# Les fichiers sont nommés "YYYY-MM-DD.md" et sont contenus dans
-# un dossier "MM" pour chaque mois de l'année.
-# Les fichiers sont générés avec un template Markdown et pour
-# la semaine en cours par défaut. Le lancement du script peut être suivi d'arguements
-# pour spécifier une ou plusieurs semaines à générer. Le nombre XX de la semaine
-# dans le template est remplacé par le numéro de la semaine dans l'année.
-
-
-# A AMELIORER
-# - Remplacer jours et mois car le mois peut changer en fonction du jour
-# - Simplifier le code et rendre plus robuste les arguments
+## Logbook generator
+## Usage: python generate_logbook.py [dates] [--all FUTURE_DATE]
 
 import os
-import sys
 import datetime
+import argparse
 
 template_path = "template.md"
 logbook_folder_path = "LogBook"
+
+def parse_date(date_str):
+    return datetime.datetime.strptime(date_str, "%Y-%m-%d")
 
 def get_week_number(date):
     return date.strftime("%U")
@@ -49,9 +41,7 @@ def get_week_month_fr(date):
     }
     return month_names[month_number], month_number
 
-# Générer le numéro de tous les jours de la semaine
 def get_week_days(date):
-    # Ajuster la date pour qu'elle corresponde au lundi de la semaine
     start_of_week = date - datetime.timedelta(days=date.weekday())
     days = []
     months = []
@@ -67,8 +57,7 @@ def get_week_template():
     with open(template_path, "r") as file:
         return file.read()
     
-# Remplacer le template par les informations de la semaine
-def replace_week_template(template, week_number, week_days, week_month, week_year):
+def replace_week_template(template, week_number, week_days, week_year):
     template = template.replace("XX", week_number)
     template = template.replace("LU", week_days[0][0])
     template = template.replace("MA", week_days[0][1])
@@ -88,23 +77,21 @@ def replace_week_template(template, week_number, week_days, week_month, week_yea
     return template
 
 def get_week_file_path(date):
-    # Récupère le chemin du fichier de la semaine
-    # Le nom du fichier est "YYYY-MM-DD.md" où DD est 
-    # le numéro du jour de la semaine du lundi de cette semaine
-    week_number = get_week_number(date)
-    week_month_fr, month_number = get_week_month_fr(date)
-    week_year = get_week_year(date)
+    start_of_week = date - datetime.timedelta(days=date.weekday())
+    week_number = get_week_number(start_of_week)
+    week_month_fr, month_number = get_week_month_fr(start_of_week)
+    week_year = get_week_year(start_of_week)
     week_file_name = f"Week {week_number}.md"
     week_folder_path = os.path.join(logbook_folder_path, week_year, f"{month_number:02d}_" + week_month_fr)
     week_file_path = os.path.join(week_folder_path, week_file_name)
     return week_file_path
 
 def create_week_folder(date):
-    # Crée le dossier du mois si il n'existe pas
-    # Le nom du dossier est le numéro du mois en français
-    week_month_fr, month_number = get_week_month_fr(date)
-    week_year = get_week_year(date)
+    start_of_week = date - datetime.timedelta(days=date.weekday())
+    week_month_fr, month_number = get_week_month_fr(start_of_week)
+    week_year = get_week_year(start_of_week)
     week_folder_path = os.path.join(logbook_folder_path, week_year, f"{month_number:02d}_" + week_month_fr)
+
     if not os.path.exists(week_folder_path):
         os.makedirs(week_folder_path)
 
@@ -112,42 +99,59 @@ def create_week_file(date):
     week_template = get_week_template()
     week_file_path = get_week_file_path(date)
     week_number = get_week_number(date)
-    week_day = get_week_day(date)
     week_days = get_week_days(date)
     week_month = get_week_month(date)
     week_year = get_week_year(date)
-    week_content = replace_week_template(week_template, week_number, week_days, week_month, week_year)
-    with open(week_file_path, "w") as file:
-        file.write(week_content)
+    week_content = replace_week_template(week_template, week_number, week_days, week_year)
+  
+    if not os.path.exists(week_file_path):
+        with open(week_file_path, "w") as file:
+            file.write(week_content)
 
-def generate_logbook():
-    date = datetime.datetime.now()
+def get_mondays_between(start, end):
+    current = start - datetime.timedelta(days=start.weekday())
+    last = end - datetime.timedelta(days=end.weekday())
+
+    weeks = []
+    while current <= last + datetime.timedelta(weeks=1):
+        weeks.append(current)
+        current += datetime.timedelta(weeks=1)
+    return weeks
+
+def generate_logbook(date):
     create_week_folder(date)
     create_week_file(date)
-    # Lis les arguments pour générer des semaines spécifiques
-    # Si l'argument -all est présent, génère toutes les semaines 
-    # jusqu'à la date passée en argument
-    if "-all" in sys.argv:
-        if len(sys.argv) > 2:
-            date = datetime.datetime.strptime(sys.argv[1], "%Y-%m-%d")
-        # else:
-        #     date = datetime.datetime.now()
-        for i in range(1, int(get_week_number(date)) + 1):
-            week_date = date - datetime.timedelta(days=date.weekday()) + datetime.timedelta(weeks=i)
-            create_week_folder(week_date)
-            create_week_file(week_date)
-    else:
-        for arg in sys.argv[1:]:
-            #if arg.isdigit():
-            date = datetime.datetime.strptime(arg, "%Y-%m-%d")
-            create_week_folder(date)
-            create_week_file(date)
 
-    # if len(sys.argv) > 1:
-    #     for arg in sys.argv[1:]:
-    #         date = datetime.datetime.strptime(arg, "%Y-%m-%d")
-    #         create_week_folder(date)
-    #         create_week_file(date)
+def main():
+
+    parser = argparse.ArgumentParser(description="Logbook generator")
+    parser.add_argument("dates", nargs="*", help="Dates au format YYYY-MM-DD dont le logbook doit être généré")
+    parser.add_argument("--all", metavar="FUTURE_DATE", help="Génère un journal de bord pour chaque semaine jusqu'à FUTURE_DATE incluse (format YYYY-MM-DD)")
+    args = parser.parse_args()
+
+    today = datetime.datetime.now()
+
+    if args.all:
+        future_date = parse_date(args.all)
+        if future_date < today:
+            print("❌ La date passée à --all doit se trouver dans le futur.")
+            return
+        weeks = get_mondays_between(today, future_date)
+        for week in weeks:
+            generate_logbook(week)
+
+    elif args.dates:
+        for date_str in args.dates:
+            try:
+                date = parse_date(date_str)
+                generate_logbook(date)
+            except ValueError:
+                print(f"⚠️ Format de date invalide : {date_str} (attendu : YYYY-MM-DD)")
+    else:
+        generate_logbook(today)
+    
+    print("✅ Journal de bord généré avec succès.")
+
 
 if __name__ == "__main__":
-    generate_logbook()
+    main()
