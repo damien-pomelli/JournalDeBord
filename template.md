@@ -1,15 +1,15 @@
-# Semaine XX, du lundi LU.MM au dimanche DI.MM YYYY
+# Semaine XX, du lundi LU.Mlu au dimanche DI.Mdi YYYY
 
 ## Résumé de la semaine
 
-## Lundi LU.MM
+## Lundi LU.Mlu
 
-## Mardi MA.MM
+## Mardi MA.Mma
 
-## Mercredi ME.MM
+## Mercredi ME.Mme
 
-## Jeudi JE.MM
+## Jeudi JE.Mje
 
-## Vendredi VE.MM
+## Vendredi VE.Mve
 
-## Samedi SA.MM
+## Samedi SA.Msa
