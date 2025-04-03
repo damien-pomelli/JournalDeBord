@@ -6,7 +6,7 @@ import datetime
 import argparse
 
 template_path = "template.md"
-logbook_folder_path = "LogBook"
+logbook_folder_path = "/mnt/c/Users/Damien/Dropbox/PC/Documents/HEIG TB/Suivi - planif/Journal de bord" # "/mnt/c/Users/Damien/Dropbox/PC/Documents/YOTASYS/TDOA" # "/mnt/c/Users/Damien/Dropbox/PC/Documents/HEIG TB/Suivi - planif/Journal de bord" # "LogBook"
 
 def parse_date(date_str):
     return datetime.datetime.strptime(date_str, "%Y-%m-%d")
@@ -17,8 +17,8 @@ def get_week_number(date):
 def get_week_day(date):
     return date.strftime("%d")
 
-def get_week_date(date):
-    return date.strftime("%Y-%m-%d")
+# def get_week_date(date):
+#     return date.strftime("%Y-%m-%d")
 
 def get_week_month(date):
     return date.strftime("%m")
@@ -100,7 +100,6 @@ def create_week_file(date):
     week_file_path = get_week_file_path(date)
     week_number = get_week_number(date)
     week_days = get_week_days(date)
-    week_month = get_week_month(date)
     week_year = get_week_year(date)
     week_content = replace_week_template(week_template, week_number, week_days, week_year)
   
@@ -109,14 +108,14 @@ def create_week_file(date):
             file.write(week_content)
 
 def get_mondays_between(start, end):
-    current = start - datetime.timedelta(days=start.weekday())
-    last = end - datetime.timedelta(days=end.weekday())
+    current_monday = start - datetime.timedelta(days=start.weekday())
+    last_monday = end - datetime.timedelta(days=end.weekday())
 
-    weeks = []
-    while current <= last + datetime.timedelta(weeks=1):
-        weeks.append(current)
-        current += datetime.timedelta(weeks=1)
-    return weeks
+    mondays = []
+    while current_monday <= last_monday + datetime.timedelta(weeks=1):
+        mondays.append(current_monday)
+        current_monday += datetime.timedelta(weeks=1)
+    return mondays
 
 def generate_logbook(date):
     create_week_folder(date)
